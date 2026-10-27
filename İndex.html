@@ -1,0 +1,211 @@
+# A-k-D-nyas-
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aşk ve kişilik testleriyle kendini keşfet. Eğlenceli sonuçlarını arkadaşlarınla paylaş!">
+  <title>Aşk Testi Dünyası 💗</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #542d48;
+      background: linear-gradient(145deg,#fff0f6,#f8edff);
+    }
+    header { text-align: center; padding: 28px 16px; }
+    header h1 { color: #d63384; margin-bottom: 8px; }
+    header p { margin: 8px 0; }
+    main { max-width: 650px; margin: auto; padding: 12px; }
+    .card {
+      background: white; padding: 22px; margin: 16px 0;
+      border-radius: 22px; box-shadow: 0 5px 20px #b85d8b18;
+    }
+    h2 { color: #c02c78; }
+    button {
+      width: 100%; padding: 14px; margin-top: 10px;
+      border: 0; border-radius: 14px; background: #df4d94;
+      color: white; font-size: 16px; cursor: pointer;
+    }
+    button:hover { background: #bf3278; }
+    .option {
+      background: #fff0f6; color: #713c5d;
+      border: 1px solid #f2c3dc; text-align: left;
+    }
+    .option.selected { background: #f7c5df; border: 2px solid #d63384; }
+    .hidden { display: none; }
+    #result { line-height: 1.7; }
+    footer { text-align: center; padding: 25px 12px; font-size: 13px; }
+    a { color: #b92f79; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>💗 Aşk Testi Dünyası</h1>
+    <p>Kalbini keşfet, kendini tanı, eğlen! 🌸</p>
+  </header>
+
+  <main>
+    <section class="card" id="home">
+      <h2>✨ Eğlence dünyana hoş geldin!</h2>
+      <p>Bugün hangi testi çözmek istersin?</p>
+      <button onclick="startTest('love')">💘 Aşkta nasıl birisin?</button>
+      <button onclick="startTest('personality')">🌷 Sen hangi çiçeksin?</button>
+    </section>
+
+    <section class="card hidden" id="quiz">
+      <p id="progress"></p>
+      <h2 id="question"></h2>
+      <div id="options"></div>
+      <button id="next" onclick="nextQuestion()" disabled>
+        Devam et 💕
+      </button>
+    </section>
+
+    <section class="card hidden" id="result">
+      <h2>Sonucun hazır! 💖</h2>
+      <h3 id="resultTitle"></h3>
+      <p id="resultText"></p>
+      <button onclick="shareResult()">Sonucumu paylaş 📲</button>
+      <button onclick="backHome()">Başka bir test çöz 🌸</button>
+    </section>
+  </main>
+
+  <footer>
+    Eğlence amaçlı hazırlanmıştır 💗<br>
+    <a href="mailto:iletisim@example.com">İletişim</a>
+  </footer>
+
+  <script>
+    const tests = {
+      love: {
+        questions: [
+          {
+            q: "Hoşlandığın kişi mesaj atınca ne yaparsın?",
+            a: ["Hemen cevap veririm", "Biraz heyecanlanırım", "Sakin davranırım"]
+          },
+          {
+            q: "Senin için aşkta en önemli şey ne?",
+            a: ["Güven ve sadakat", "Heyecan ve romantizm", "Arkadaşlık ve huzur"]
+          },
+          {
+            q: "Bir sorun yaşadığında ne yaparsın?",
+            a: ["Konuşup çözmeye çalışırım", "Biraz zamana ihtiyaç duyarım", "Duygularımı içimde tutarım"]
+          }
+        ],
+        results: [
+          ["Romantik Kalp 💗", "Sevdiğinde küçük detaylara önem veren, romantik birisin. Senin için ilgi ve güven çok değerli."],
+          ["Tutkulu Ruh ❤️", "Duygularını yoğun yaşayan, heyecanı seven birisin. Kalbin kadar kendi huzuruna da önem ver!"],
+          ["Özgür Ruh 🦋", "İlişkide samimiyeti ve kişisel alanı önemsiyorsun. Senin için sevgi kadar rahatlık da önemli."]
+        ]
+      },
+      personality: {
+        questions: [
+          {
+            q: "Boş bir günün olsa ne yaparsın?",
+            a: ["Sevdiklerimle buluşurum", "Doğada vakit geçiririm", "Kendime zaman ayırırım"]
+          },
+          {
+            q: "Arkadaşların seni nasıl tanımlar?",
+            a: ["Neşeli ve sıcakkanlı", "Sakin ve düşünceli", "Bağımsız ve yaratıcı"]
+          },
+          {
+            q: "Seni en çok ne mutlu eder?",
+            a: ["Sevdiklerimle güzel anlar", "Huzur ve doğa", "Yeni şeyler keşfetmek"]
+          }
+        ],
+        results: [
+          ["Ayçiçeği 🌻", "Enerjinle çevrene neşe katıyorsun. Sıcakkanlılığın ve samimiyetin seni özel kılıyor."],
+          ["Papatya 🌼", "Sade güzellikleri ve huzuru seviyorsun. İnceliğin ve içtenliğin öne çıkıyor."],
+          ["Lavanta 💜", "Kendi dünyası olan, yaratıcı ve özgün birisin. Farklılığın en güzel yanlarından biri."]
+        ]
+      }
+    };
+
+    let currentTest;
+    let index = 0;
+    let score = 0;
+    let selected = -1;
+    let finalTitle = "";
+    let finalText = "";
+
+    function startTest(type) {
+      currentTest = tests[type];
+      index = 0;
+      score = 0;
+      document.getElementById("home").classList.add("hidden");
+      document.getElementById("result").classList.add("hidden");
+      document.getElementById("quiz").classList.remove("hidden");
+      showQuestion();
+      window.scrollTo(0, 0);
+    }
+
+    function showQuestion() {
+      selected = -1;
+      const q = currentTest.questions[index];
+      document.getElementById("progress").textContent =
+        `Soru ${index + 1} / ${currentTest.questions.length}`;
+      document.getElementById("question").textContent = q.q;
+      document.getElementById("options").innerHTML = "";
+      document.getElementById("next").disabled = true;
+      document.getElementById("next").textContent =
+        index === currentTest.questions.length - 1 ? "Sonucumu gör 💖" : "Devam et 💕";
+
+      q.a.forEach((answer, i) => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = answer;
+        btn.onclick = () => {
+          selected = i;
+          score += i;
+          document.querySelectorAll(".option").forEach(b => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          document.getElementById("next").disabled = false;
+        };
+        document.getElementById("options").appendChild(btn);
+      });
+    }
+
+    function nextQuestion() {
+      if (selected < 0) return;
+      if (index < currentTest.questions.length - 1) {
+        index++;
+        showQuestion();
+      } else {
+        const result = currentTest.results[score % 3];
+        finalTitle = result[0];
+        finalText = result[1];
+        document.getElementById("quiz").classList.add("hidden");
+        document.getElementById("result").classList.remove("hidden");
+        document.getElementById("resultTitle").textContent = finalTitle;
+        document.getElementById("resultText").textContent = finalText;
+        window.scrollTo(0, 0);
+      }
+    }
+
+    async function shareResult() {
+      const text = `Aşk Testi Dünyası sonucu: ${finalTitle}\n${finalText}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "Test sonucum 💗", text });
+        } catch (e) {}
+      } else {
+        try {
+          await navigator.clipboard.writeText(text);
+          alert("Sonucun kopyalandı! İstediğin yere yapıştırabilirsin 💕");
+        } catch (e) {
+          alert(text);
+        }
+      }
+    }
+
+    function backHome() {
+      document.getElementById("result").classList.add("hidden");
+      document.getElementById("home").classList.remove("hidden");
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>
